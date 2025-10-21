@@ -1,0 +1,51 @@
+name: Contar arquivos HTML
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # permite rodar manualmente
+
+jobs:
+  count-html:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Contar e listar arquivos .html/.htm (case-insensitive)
+        id: contar
+        shell: bash
+        run: |
+          # lista (case-insensitive) *.html e *.htm
+          LIST=$(find . -type f \( -iname "*.html" -o -iname "*.htm" \) | sort)
+          COUNT=$(printf "%s\n" "$LIST" | sed '/^$/d' | wc -l)
+
+          echo "🔎 Arquivos HTML encontrados: $COUNT"
+          echo
+          if [ "$COUNT" -gt 0 ]; then
+            echo "📄 Lista:"
+            printf "%s\n" "$LIST"
+          else
+            echo "⚠️ Nenhum arquivo .html/.htm encontrado."
+          fi
+
+          # expõe como output do step (para uso em outros steps/jobs)
+          echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+
+          # publica um resumo bonitinho na aba Summary
+          {
+            echo "## Contagem de arquivos HTML"
+            echo
+            echo "**Total:** $COUNT"
+            echo
+            if [ "$COUNT" -gt 0 ]; then
+              echo "### Arquivos"
+              echo '```'
+              printf "%s\n" "$LIST"
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Mostrar total via output do step
+        run: echo "Total de HTMLs = ${{ steps.contar.outputs.count }}"
