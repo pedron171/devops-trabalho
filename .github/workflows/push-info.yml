@@ -1,0 +1,19 @@
+name: Push Info
+
+on:
+  push: # executa toda vez que alguém fizer push
+    branches:
+      - main  # você pode mudar para outra branch se quiser
+
+jobs:
+  show-info:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Exibir data e hora do push
+        run: |
+          echo "🕒 Informações do push:"
+          echo "Data e hora atual: $(date '+%d/%m/%Y %H:%M:%S')"
+          echo "Autor: ${{ github.actor }}"
+          echo "Repositório: ${{ github.repository }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Mensagem do commit: ${{ github.event.head_commit.message }}"
