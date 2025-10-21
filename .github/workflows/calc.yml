@@ -1,0 +1,19 @@
+name: Calcular 2 + 2
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # permite rodar manualmente também
+
+jobs:
+  calcular:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Definir variáveis
+        run: |
+          NUM1=2
+          NUM2=2
+          echo "🔢 Variáveis definidas: NUM1=$NUM1, NUM2=$NUM2"
+          RESULT=$((NUM1 + NUM2))
+          echo "🧮 Resultado: $RESULT"
