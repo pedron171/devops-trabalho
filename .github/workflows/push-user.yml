@@ -1,0 +1,17 @@
+name: Push User Info
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  show-user:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mostrar informações do usuário que fez o push
+        run: |
+          echo "👤 Usuário que fez o push: ${{ github.actor }}"
+          echo "💬 Mensagem do commit: ${{ github.event.head_commit.message }}"
+          echo "📦 Repositório: ${{ github.repository }}"
+          echo "🌿 Branch: ${{ github.ref_name }}"
