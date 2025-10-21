@@ -1,0 +1,18 @@
+name: Hello World
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  greet:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Say hello
+        run: echo "Hello, World! 👋"
+
+      - name: Extra (info do contexto)
+        run: |
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Autor:  ${{ github.actor }}"
+          echo "Repo:   ${{ github.repository }}"
