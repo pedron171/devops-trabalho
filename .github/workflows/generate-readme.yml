@@ -2,7 +2,7 @@ name: Gerar/Atualizar README no Push
 
 on:
   push:
-    branches: [ "main" ]   # troque se sua branch padrão for outra
+    branches: [ "main" ]   # ajuste se sua branch padrão for outra
 
 permissions:
   contents: write
@@ -11,12 +11,12 @@ jobs:
   generate:
     if: github.actor != 'github-actions[bot]'  # evita loop
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Preparar variáveis de ambiente
-        id: vars
+      - name: Preparar variáveis
         shell: bash
         run: |
           echo "DATE=$(date '+%d/%m/%Y %H:%M:%S %Z')" >> $GITHUB_ENV
@@ -27,35 +27,26 @@ jobs:
           echo "HTML_COUNT=$(find . -type f \( -iname '*.html' -o -iname '*.htm' \) | wc -l)" >> $GITHUB_ENV
           echo "FILE_COUNT=$(find . -type f | wc -l)" >> $GITHUB_ENV
 
-      - name: Instalar envsubst (gettext-base)
-        run: sudo apt-get update && sudo apt-get install -y gettext-base
-
-      - name: Gerar README a partir do template
+      - name: Gerar README.md (sem heredoc)
         shell: bash
         run: |
-          # 1) Escreve um template SEM expandir variáveis
-          cat > README.template.md <<'TEMPLATE'
-# DevOps Trabalho — ${REPO}
+          : > README.md
+          printf '%s\n' "# DevOps Trabalho — ${REPO}" >> README.md
+          printf '%s\n' "" "Este README foi gerado automaticamente por **GitHub Actions** em cada push para a branch **${BRANCH}**." "" >> README.md
 
-Este README foi gerado automaticamente por **GitHub Actions** em cada push para a branch **${BRANCH}**.
+          printf '%s\n' "## 📦 Info do repositório" >> README.md
+          printf '%s\n' "- **Branch:** ${BRANCH}" >> README.md
+          printf '%s\n' "- **Arquivos (total):** ${FILE_COUNT}" >> README.md
+          printf '%s\n' "- **Arquivos HTML:** ${HTML_COUNT}" "" >> README.md
 
-## 📦 Info do repositório
-- **Branch:** ${BRANCH}
-- **Arquivos (total):** ${FILE_COUNT}
-- **Arquivos HTML:** ${HTML_COUNT}
+          printf '%s\n' "## 🕒 Última execução" >> README.md
+          printf '%s\n' "- **Rodado por:** ${ACTOR}" >> README.md
+          printf '%s\n' "- **Data/Hora:** ${DATE}" >> README.md
+          printf '%s\n' "- **Última mensagem de commit:** ${LAST_MSG}" "" >> README.md
 
-## 🕒 Última execução
-- **Rodado por:** ${ACTOR}
-- **Data/Hora:** ${DATE}
-- **Última mensagem de commit:** ${LAST_MSG}
-
-## 🔧 Como é gerado
-- Workflow: `.github/workflows/generate-readme.yml`
-- Job: `generate`
-TEMPLATE
-
-          # 2) Expande as variáveis do template no README final
-          envsubst < README.template.md > README.md
+          printf '%s\n' "## 🔧 Como é gerado" >> README.md
+          printf '%s\n' "- Workflow: \`.github/workflows/generate-readme.yml\`" >> README.md
+          printf '%s\n' "- Job: \`generate\`" >> README.md
 
       - name: Commit & Push (somente se mudou)
         shell: bash
