@@ -1,0 +1,32 @@
+name: Execução Semanal aos Sábados
+
+on:
+  schedule:
+    # roda todo dia às 09h UTC (06h da manhã no Brasil, ajuste se quiser)
+    - cron: "0 9 * * *"
+  workflow_dispatch: # permite rodar manualmente também
+
+jobs:
+  run-on-saturday:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verificar dia da semana
+        id: dia
+        run: |
+          DIA=$(date +%u)
+          # %u → 1 = segunda ... 7 = domingo
+          echo "Hoje é o dia $DIA da semana."
+          echo "dia=$DIA" >> $GITHUB_OUTPUT
+
+      - name: Rodar apenas se for sábado
+        if: ${{ steps.dia.outputs.dia == '6' }}
+        run: |
+          echo "🎉 Hoje é sábado! Executando a tarefa semanal..."
+          date
+          echo "Exemplo: backup, limpeza ou atualização semanal."
+
+      - name: Ignorar se não for sábado
+        if: ${{ steps.dia.outputs.dia != '6' }}
+        run: |
+          echo "🚫 Hoje não é sábado. Workflow será ignorado."
+          date
