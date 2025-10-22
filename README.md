@@ -9,8 +9,8 @@ Este README foi gerado automaticamente por **GitHub Actions** em cada push para 
 
 ## 🕒 Última execução
 - **Rodado por:** pedron171
-- **Data/Hora:** 22/10/2025 22:16:43 UTC
-- **Última mensagem de commit:** fix(actions): push-stats completo e robusto (yaml válido)
+- **Data/Hora:** 22/10/2025 22:23:16 UTC
+- **Última mensagem de commit:** fix(actions): push-stats completo e corrigido (sem bad substitution)
 
 ## 🔧 Como é gerado
 - Workflow: `.github/workflows/generate-readme.yml`
