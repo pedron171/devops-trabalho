@@ -1,0 +1,31 @@
+name: Execução Noturna (if + cron)
+
+on:
+  schedule:
+    # roda a cada hora (ajuste conforme quiser)
+    - cron: "0 * * * *"  # UTC — equivale a 21h, 22h, etc.
+  workflow_dispatch:  # também pode rodar manualmente
+
+jobs:
+  run-at-night:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obter hora atual (em UTC)
+        id: hora
+        run: |
+          HORA_UTC=$(date -u +%H)
+          echo "Hora UTC atual: $HORA_UTC"
+          echo "hora=$HORA_UTC" >> $GITHUB_OUTPUT
+
+      - name: Executar somente se for horário noturno (22h–6h)
+        if: ${{ steps.hora.outputs.hora >= 22 || steps.hora.outputs.hora < 6 }}
+        run: |
+          echo "🌙 É de noite! Executando tarefa noturna..."
+          date
+          echo "Exemplo: backup, relatório, verificação, etc."
+
+      - name: Ignorar durante o dia
+        if: ${{ steps.hora.outputs.hora < 22 && steps.hora.outputs.hora >= 6 }}
+        run: |
+          echo "☀️ Agora é dia, o workflow será ignorado."
+          date
