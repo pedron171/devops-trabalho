@@ -2,7 +2,7 @@ name: Estatísticas do Push (data, usuário e contagem de HTML/CSS/JS)
 
 on:
   push:
-    branches: [ "main" ]   # ajuste se sua branch padrão for outra
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
@@ -10,13 +10,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1) Precisamos do commit anterior para comparar
+      # 1️⃣ Fazer checkout completo para poder comparar commits
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # 2) Data/hora (UTC e local)
+      # 2️⃣ Data e hora
       - name: Data e hora
         id: data
         shell: bash
@@ -28,7 +28,7 @@ jobs:
           echo "dt_utc=$DT_UTC"     >> "$GITHUB_OUTPUT"
           echo "dt_local=$DT_LOCAL" >> "$GITHUB_OUTPUT"
 
-      # 3) Usuário do push
+      # 3️⃣ Usuário do push
       - name: Usuário do push
         id: usuario
         shell: bash
@@ -36,7 +36,7 @@ jobs:
           echo "Usuário (actor): $GITHUB_ACTOR"
           echo "actor=$GITHUB_ACTOR" >> "$GITHUB_OUTPUT"
 
-      # 4) Arquivos alterados neste push (robusto, sem exit 1)
+      # 4️⃣ Arquivos alterados neste push
       - name: Arquivos alterados neste push
         id: changed
         shell: bash
@@ -56,7 +56,7 @@ jobs:
           echo "Arquivos alterados:"
           cat /tmp/changed_files.txt || true
 
-          # Contagens por extensão (case-insensitive) usando awk (não falha quando não há matches)
+          # Contagens por extensão (case-insensitive)
           COUNT_HTML=$(awk 'BEGIN{IGNORECASE=1} /\.html?$/ {c++} END{print c+0}' /tmp/changed_files.txt)
           COUNT_CSS=$(awk  'BEGIN{IGNORECASE=1} /\.css$/   {c++} END{print c+0}' /tmp/changed_files.txt)
           COUNT_JS=$(awk   'BEGIN{IGNORECASE=1} /\.m?js$/  {c++} END{print c+0}' /tmp/changed_files.txt)
@@ -67,7 +67,7 @@ jobs:
           echo "css=$COUNT_CSS"   >> "$GITHUB_OUTPUT"
           echo "js=$COUNT_JS"     >> "$GITHUB_OUTPUT"
 
-      # 5) Resumo na aba Summary
+      # 5️⃣ Resumo na aba "Summary"
       - name: Publicar resumo
         shell: bash
         run: |
@@ -84,11 +84,11 @@ jobs:
             echo "- **JS:**   ${{ steps.changed.outputs.js }}"
           } >> "$GITHUB_STEP_SUMMARY"
 
-      # 6) Logs diretos (opcional)
+      # 6️⃣ Mostrar no log em sequência (corrigido)
       - name: Mostrar no log em sequência
         shell: bash
         run: |
-          echo "🕒 ${ { steps.data.outputs.dt_local } }" | sed 's/{ //; s/ }//'
-          echo "👤 ${ { steps.usuario.outputs.actor } }" | sed 's/{ //; s/ }//'
+          echo "🕒 ${{ steps.data.outputs.dt_local }}"
+          echo "👤 ${{ steps.usuario.outputs.actor }}"
           echo "📄 HTML=${{ steps.changed.outputs.html }} CSS=${{ steps.changed.outputs.css }} JS=${{ steps.changed.outputs.js }}"
 
