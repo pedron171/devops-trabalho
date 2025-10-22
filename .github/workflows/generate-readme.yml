@@ -2,34 +2,39 @@ name: Gerar/Atualizar README no Push
 
 on:
   push:
-    branches: [ "main" ]   # ajuste se sua branch padrão for outra
+    branches: [ "main" ]   # troque se sua branch padrão for outra
 
 permissions:
   contents: write
 
 jobs:
   generate:
-    # evita loop quando o commit anterior foi do próprio bot
-    if: github.actor != 'github-actions[bot]'
+    if: github.actor != 'github-actions[bot]'  # evita loop
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Gerar conteúdo do README.md (com variáveis)
+      - name: Preparar variáveis de ambiente
+        id: vars
         shell: bash
         run: |
-          DATE="$(date '+%d/%m/%Y %H:%M:%S %Z')"
-          ACTOR="${GITHUB_ACTOR}"
-          REPO="${GITHUB_REPOSITORY}"
-          BRANCH="${GITHUB_REF_NAME:-$(git rev-parse --abbrev-ref HEAD)}"
-          LAST_MSG="$(git log -1 --pretty=%s || echo 'n/a')"
-          HTML_COUNT=$(find . -type f \( -iname '*.html' -o -iname '*.htm' \) | wc -l)
-          FILE_COUNT=$(find . -type f | wc -l)
+          echo "DATE=$(date '+%d/%m/%Y %H:%M:%S %Z')" >> $GITHUB_ENV
+          echo "ACTOR=${GITHUB_ACTOR}"               >> $GITHUB_ENV
+          echo "REPO=${GITHUB_REPOSITORY}"           >> $GITHUB_ENV
+          echo "BRANCH=${GITHUB_REF_NAME:-$(git rev-parse --abbrev-ref HEAD)}" >> $GITHUB_ENV
+          echo "LAST_MSG=$(git log -1 --pretty=%s || echo 'n/a')" >> $GITHUB_ENV
+          echo "HTML_COUNT=$(find . -type f \( -iname '*.html' -o -iname '*.htm' \) | wc -l)" >> $GITHUB_ENV
+          echo "FILE_COUNT=$(find . -type f | wc -l)" >> $GITHUB_ENV
 
-          # ⚠️ Sem aspas no EOF para expandir variáveis:
-          cat > README.md <<EOF
+      - name: Instalar envsubst (gettext-base)
+        run: sudo apt-get update && sudo apt-get install -y gettext-base
+
+      - name: Gerar README a partir do template
+        shell: bash
+        run: |
+          # 1) Escreve um template SEM expandir variáveis
+          cat > README.template.md <<'TEMPLATE'
 # DevOps Trabalho — ${REPO}
 
 Este README foi gerado automaticamente por **GitHub Actions** em cada push para a branch **${BRANCH}**.
@@ -45,9 +50,12 @@ Este README foi gerado automaticamente por **GitHub Actions** em cada push para 
 - **Última mensagem de commit:** ${LAST_MSG}
 
 ## 🔧 Como é gerado
-- Workflow: \`.github/workflows/generate-readme.yml\`
-- Job: \`generate\`
-EOF
+- Workflow: `.github/workflows/generate-readme.yml`
+- Job: `generate`
+TEMPLATE
+
+          # 2) Expande as variáveis do template no README final
+          envsubst < README.template.md > README.md
 
       - name: Commit & Push (somente se mudou)
         shell: bash
@@ -61,5 +69,4 @@ EOF
           else
             echo "Sem mudanças no README.md — nada para commitar."
           fi
-
 
