@@ -1,0 +1,62 @@
+name: Gerar/Atualizar README no Push
+
+on:
+  push:
+    branches:
+      - main   # ajuste se sua branch padrão for outra
+
+permissions:
+  contents: write  # precisa para commitar pelo bot
+
+jobs:
+  generate:
+    # evita loop: se o push foi do bot, não executa
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Gerar conteúdo do README.md
+        run: |
+          DATE="$(date '+%d/%m/%Y %H:%M:%S %Z')"
+          ACTOR="${GITHUB_ACTOR}"
+          REPO="${GITHUB_REPOSITORY}"
+          BRANCH="${GITHUB_REF_NAME:-$(git rev-parse --abbrev-ref HEAD)}"
+          LAST_MSG="$(git log -1 --pretty=%s || echo 'n/a')"
+          HTML_COUNT=$(find . -type f \( -iname '*.html' -o -iname '*.htm' \) | wc -l)
+          FILE_COUNT=$(find . -type f | wc -l)
+
+          cat > README.md <<'EOF'
+          # DevOps Trabalho — ${REPO}
+
+          Este README foi gerado automaticamente por **GitHub Actions** em cada push para a branch **${BRANCH}**.
+
+          ## 📦 Info do repositório
+          - **Branch:** ${BRANCH}
+          - **Arquivos (total):** ${FILE_COUNT}
+          - **Arquivos HTML:** ${HTML_COUNT}
+
+          ## 🕒 Última execução
+          - **Rodado por:** ${ACTOR}
+          - **Data/Hora:** ${DATE}
+          - **Última mensagem de commit:** ${LAST_MSG}
+
+          ## 🔧 Como é gerado
+          - Workflow: `.github/workflows/generate-readme.yml`
+          - Job: `generate`
+          EOF
+
+      - name: Commit & Push (somente se mudou)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if ! git diff --quiet README.md; then
+            git add README.md
+            git commit -m "docs: atualiza README [skip ci]"
+            git push
+          else
+            echo "Sem mudanças no README.md — nada para commitar."
+          fi
