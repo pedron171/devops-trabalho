@@ -4,13 +4,13 @@ Este README foi gerado automaticamente por **GitHub Actions** em cada push para 
 
 ## 📦 Info do repositório
 - **Branch:** main
-- **Arquivos (total):** 61
+- **Arquivos (total):** 63
 - **Arquivos HTML:** 1
 
 ## 🕒 Última execução
 - **Rodado por:** pedron171
-- **Data/Hora:** 22/10/2025 00:58:54 UTC
-- **Última mensagem de commit:** teste: adiciona arquivo grande
+- **Data/Hora:** 22/10/2025 01:03:34 UTC
+- **Última mensagem de commit:** chore(actions): adiciona estatísticas do push (data, usuário e contagem de arquivos)
 
 ## 🔧 Como é gerado
 - Workflow: `.github/workflows/generate-readme.yml`
