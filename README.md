@@ -9,8 +9,8 @@ Este README foi gerado automaticamente por **GitHub Actions** em cada push para 
 
 ## 🕒 Última execução
 - **Rodado por:** pedron171
-- **Data/Hora:** 22/10/2025 01:11:39 UTC
-- **Última mensagem de commit:** fix(actions): corrige erro exit 1 no step de arquivos alterados
+- **Data/Hora:** 22/10/2025 22:16:43 UTC
+- **Última mensagem de commit:** fix(actions): push-stats completo e robusto (yaml válido)
 
 ## 🔧 Como é gerado
 - Workflow: `.github/workflows/generate-readme.yml`
