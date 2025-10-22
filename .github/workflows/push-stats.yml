@@ -1,0 +1,92 @@
+name: Estatísticas do Push (data, usuário, contagem de HTML/CSS/JS)
+
+on:
+  push:
+    branches: [ "main" ]   # ajuste se quiser outra branch
+  workflow_dispatch:        # permite rodar manualmente
+
+jobs:
+  push-stats:
+    runs-on: ubuntu-latest
+    steps:
+      # 1) Checkout com histórico suficiente para comparar o push
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # precisamos do commit anterior para comparar
+
+      # 2) Step: Data/Hora (UTC e local)
+      - name: Data e hora
+        id: data
+        run: |
+          DT_UTC="$(date -u '+%d/%m/%Y %H:%M:%S UTC')"
+          DT_LOCAL="$(date '+%d/%m/%Y %H:%M:%S %Z')"
+          echo "Data/Hora (UTC):   $DT_UTC"
+          echo "Data/Hora (Local): $DT_LOCAL"
+          echo "dt_utc=$DT_UTC"       >> "$GITHUB_OUTPUT"
+          echo "dt_local=$DT_LOCAL"   >> "$GITHUB_OUTPUT"
+
+      # 3) Step: Usuário do push
+      - name: Usuário do push
+        id: usuario
+        run: |
+          echo "Usuário (actor): $GITHUB_ACTOR"
+          echo "actor=$GITHUB_ACTOR" >> "$GITHUB_OUTPUT"
+
+      # 4) Step: Descobrir quais arquivos mudaram neste push
+      - name: Arquivos alterados neste push
+        id: changed
+        shell: bash
+        run: |
+          BEFORE="${{ github.event.before }}"
+          AFTER="${{ github.sha }}"
+
+          # Se for o primeiro commit (before = 0000...), compare com árvore vazia
+          if [[ "$BEFORE" == "0000000000000000000000000000000000000000" || -z "$BEFORE" ]]; then
+            echo "Primeiro push do repositório: listando arquivos rastreados."
+            git ls-files > /tmp/changed_files.txt
+          else
+            echo "Comparando $BEFORE..$AFTER"
+            git diff --name-only "$BEFORE" "$AFTER" > /tmp/changed_files.txt
+          fi
+
+          echo "Arquivos alterados:"
+          cat /tmp/changed_files.txt || true
+
+          # Contagens por extensão (case-insensitive)
+          COUNT_HTML=$(grep -iE '\.html?$' /tmp/changed_files.txt | sed '/^$/d' | wc -l | tr -d ' ')
+          COUNT_CSS=$(grep -iE '\.css$'    /tmp/changed_files.txt | sed '/^$/d' | wc -l | tr -d ' ')
+          COUNT_JS=$(grep -iE '\.m?js$'    /tmp/changed_files.txt | sed '/^$/d' | wc -l | tr -d ' ')
+
+          echo "HTML: $COUNT_HTML | CSS: $COUNT_CSS | JS: $COUNT_JS"
+
+          echo "html=$COUNT_HTML" >> "$GITHUB_OUTPUT"
+          echo "css=$COUNT_CSS"   >> "$GITHUB_OUTPUT"
+          echo "js=$COUNT_JS"     >> "$GITHUB_OUTPUT"
+
+      # 5) Step: Resumo bonitinho (Job Summary)
+      - name: Publicar resumo
+        run: |
+          {
+            echo "## 📊 Estatísticas do Push"
+            echo ""
+            echo "- **Data/Hora (Local):** ${{ steps.data.outputs.dt_local }}"
+            echo "- **Data/Hora (UTC):**   ${{ steps.data.outputs.dt_utc }}"
+            echo "- **Usuário:**          ${{ steps.usuario.outputs.actor }}"
+            echo ""
+            echo "### Arquivos alterados neste push"
+            echo "- **HTML:** ${{ steps.changed.outputs.html }}"
+            echo "- **CSS:**  ${{ steps.changed.outputs.css }}"
+            echo "- **JS:**   ${{ steps.changed.outputs.js }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # 6) Step: Logs diretos (opcional)
+      - name: Mostrar no log em sequência
+        run: |
+          echo "🕒 ${{
+            steps.data.outputs.dt_local
+          }}"
+          echo "👤 ${{
+            steps.usuario.outputs.actor
+          }}"
+          echo "📄 HTML=${{ steps.changed.outputs.html }} CSS=${{ steps.changed.outputs.css }} JS=${{ steps.changed.outputs.js }}"
