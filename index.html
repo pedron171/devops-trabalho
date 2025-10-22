@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GitHub Actions — Guia Rápido</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="container">
+      <h1>GitHub Actions — Guia Rápido</h1>
+      <p class="subtitle">Workflows automatizados para CI/CD no GitHub</p>
+    </header>
+
+    <main class="container">
+      <section class="grid">
+        <article class="card">
+          <h2>O que são?</h2>
+          <p>
+            <strong>GitHub Actions</strong> é a plataforma de automação do GitHub.
+            Você cria <em>workflows</em> (arquivos YAML) que rodam em resposta a
+            eventos como <code>push</code>, <code>pull_request</code> ou no agendamento
+            (<code>cron</code>).
+          </p>
+        </article>
+
+        <article class="card">
+          <h2>Conceitos</h2>
+          <ul class="bullets">
+            <li><strong>Workflow:</strong> arquivo YAML em <code>.github/workflows/</code>.</li>
+            <li><strong>Jobs:</strong> grupos de passos executados em um <em>runner</em>.</li>
+            <li><strong>Steps:</strong> comandos ou <em>actions</em> individuais.</li>
+            <li><strong>Runners:</strong> máquinas que executam os jobs (ex.: <code>ubuntu-latest</code>).</li>
+            <li><strong>Events:</strong> gatilhos (push, PR, release, schedule... ).</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <h2>Exemplo de workflow</h2>
+          <pre class="code"><code># .github/workflows/ci.yml
+name: CI
+on:
+  push:
+    branches: [ "main" ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Instalar deps e testar
+        run: |
+          npm ci
+          npm test --if-present</code></pre>
+          <p class="note">Crie a pasta <code>.github/workflows</code> e salve como <code>ci.yml</code>.</p>
+        </article>
+      </section>
+
+      <section class="card">
+        <h2>Simular pipeline (demo no navegador)</h2>
+        <p>Clique para ver uma simulação didática de um workflow rodando etapas.</p>
+        <div class="status-bar">
+          <span class="badge" data-badge="checkout">Checkout</span>
+          <span class="badge" data-badge="setup">Setup Node</span>
+          <span class="badge" data-badge="install">Instalar deps</span>
+          <span class="badge" data-badge="test">Testes</span>
+          <span class="badge" data-badge="done">Concluir</span>
+        </div>
+        <button id="runDemo" class="btn">Rodar simulação</button>
+        <pre id="logs" class="terminal" aria-live="polite"></pre>
+      </section>
+
+      <section class="card">
+        <h2>Como usar no seu repositório</h2>
+        <ol>
+          <li>Crie seu repositório (já feito ✅).</li>
+          <li>Adicione estes arquivos <code>index.html</code>, <code>styles.css</code> e <code>script.js</code> no repositório.</li>
+          <li>Opcional: crie <code>.github/workflows/ci.yml</code> com o exemplo acima.</li>
+          <li>Faça <code>git add .</code>, <code>git commit -m "Site de estudo GitHub Actions"</code> e <code>git push</code>.</li>
+          <li>Veja as execuções em <strong>Actions</strong> no GitHub.</li>
+        </ol>
+      </section>
+    </main>
+
+    <footer class="container footer">
+      <small>Feito para estudo de DevOps · © 2025</small>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
