@@ -4,13 +4,13 @@ Este README foi gerado automaticamente por **GitHub Actions** em cada push para 
 
 ## 📦 Info do repositório
 - **Branch:** main
-- **Arquivos (total):** 55
+- **Arquivos (total):** 57
 - **Arquivos HTML:** 1
 
 ## 🕒 Última execução
 - **Rodado por:** pedron171
-- **Data/Hora:** 22/10/2025 00:45:26 UTC
-- **Última mensagem de commit:** chore(actions): adiciona workflow nortuno (if + agendamento)
+- **Data/Hora:** 22/10/2025 00:52:40 UTC
+- **Última mensagem de commit:** chore(actions): adiciona execução semanal aos sábados
 
 ## 🔧 Como é gerado
 - Workflow: `.github/workflows/generate-readme.yml`
