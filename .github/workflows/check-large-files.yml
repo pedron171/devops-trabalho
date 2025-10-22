@@ -1,0 +1,42 @@
+name: Verificar arquivos grandes
+
+on:
+  push:        # roda a cada push
+    branches: [ "main" ]
+  workflow_dispatch:  # permite rodar manualmente também
+
+jobs:
+  check-large-files:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fazer checkout do código
+        uses: actions/checkout@v4
+
+      - name: Procurar arquivos maiores que 100 KB
+        id: check
+        shell: bash
+        run: |
+          echo "🔍 Procurando arquivos maiores que 100 KB..."
+          # lista arquivos com tamanho >=100k, ignora .git e node_modules
+          RESULT=$(find . -type f ! -path "./.git/*" ! -path "./node_modules/*" -size +100k -exec ls -lh {} \; | awk '{print $9 " (" $5 ")"}')
+
+          if [ -n "$RESULT" ]; then
+            echo "🚨 Foram encontrados arquivos grandes:"
+            echo "$RESULT"
+            echo "found=true" >> $GITHUB_OUTPUT
+            echo "list=$RESULT" >> $GITHUB_OUTPUT
+          else
+            echo "✅ Nenhum arquivo maior que 100 KB encontrado."
+            echo "found=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Alerta se arquivos grandes existirem
+        if: ${{ steps.check.outputs.found == 'true' }}
+        run: |
+          echo "⚠️ ALERTA: Foram encontrados arquivos maiores que 100 KB!"
+          echo "${{ steps.check.outputs.list }}"
+
+      - name: Confirmar se tudo está ok
+        if: ${{ steps.check.outputs.found == 'false' }}
+        run: |
+          echo "🟢 Tudo certo — nenhum arquivo grande foi encontrado."
