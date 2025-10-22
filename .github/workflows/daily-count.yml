@@ -1,0 +1,47 @@
+name: Contagem diária de arquivos (meia-noite)
+
+on:
+  schedule:
+    - cron: "0 3 * * *"   # 00:00 em Brasília (UTC-3)
+  workflow_dispatch:       # permite rodar manualmente
+
+jobs:
+  count-files:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Contar arquivos (exclui .git e node_modules)
+        id: contar
+        shell: bash
+        run: |
+          TOTAL=$(find . -type f ! -path "./.git/*" ! -path "./node_modules/*" | wc -l | tr -d ' ')
+          echo "Total de arquivos: $TOTAL"
+          echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
+
+          # também salva em um arquivo para download
+          {
+            echo "Data/Hora (UTC): $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+            echo "Repositório: $GITHUB_REPOSITORY"
+            echo "Total de arquivos: $TOTAL"
+          } > file-count.txt
+
+      - name: Publicar resumo
+        shell: bash
+        run: |
+          {
+            echo "## 🕛 Contagem diária de arquivos"
+            echo "- **Horário UTC:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+            echo "- **Repositório:** $GITHUB_REPOSITORY"
+            echo "- **Total de arquivos:** ${{ steps.contar.outputs.total }}"
+            echo
+            echo "_Obs.: agendado para 03:00 UTC (00:00 Brasília)._"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Anexar artefato (file-count.txt)
+        uses: actions/upload-artifact@v4
+        with:
+          name: file-count
+          path: file-count.txt
+          if-no-files-found: error
