@@ -31,32 +31,39 @@ jobs:
         id: usuario
         run: |
           echo "Usuário (actor): $GITHUB_ACTOR"
-          echo "actor=$GITHUB_ACTOR" >> "$GITHUB_OUTPUT"
+          echo "actor=$GITHUB_ACTOR" >> "$GITHUB_OUTPUT" 
 
-      # 4) Step: Descobrir quais arquivos mudaram neste push
-      - name: Arquivos alterados neste push
+     - name: Arquivos alterados neste push
         id: changed
         shell: bash
         run: |
+          set -u
+
           BEFORE="${{ github.event.before }}"
           AFTER="${{ github.sha }}"
 
-          # Se for o primeiro commit (before = 0000...), compare com árvore vazia
-          if [[ "$BEFORE" == "0000000000000000000000000000000000000000" || -z "$BEFORE" ]]; then
-            echo "Primeiro push do repositório: listando arquivos rastreados."
-            git ls-files > /tmp/changed_files.txt
+          # Se for primeiro push (before zerado) ou inválido, calcula um base seguro
+          if [[ -z "${BEFORE}" || "${BEFORE}" =~ ^0{40}$ ]]; then
+            echo "Primeiro push ou 'before' inválido; usando merge-base com a branch padrão."
+            BASE="$(git merge-base HEAD HEAD~1 2>/dev/null || true)"
+            if [[ -z "${BASE}" ]]; then
+              # repo com 1 commit apenas
+              git ls-files > /tmp/changed_files.txt
+            else
+              git diff --name-only "${BASE}" "${AFTER}" > /tmp/changed_files.txt
+            fi
           else
-            echo "Comparando $BEFORE..$AFTER"
-            git diff --name-only "$BEFORE" "$AFTER" > /tmp/changed_files.txt
+            echo "Comparando ${BEFORE}..${AFTER}"
+            git diff --name-only "${BEFORE}" "${AFTER}" > /tmp/changed_files.txt
           fi
 
           echo "Arquivos alterados:"
           cat /tmp/changed_files.txt || true
 
-          # Contagens por extensão (case-insensitive)
-          COUNT_HTML=$(grep -iE '\.html?$' /tmp/changed_files.txt | sed '/^$/d' | wc -l | tr -d ' ')
-          COUNT_CSS=$(grep -iE '\.css$'    /tmp/changed_files.txt | sed '/^$/d' | wc -l | tr -d ' ')
-          COUNT_JS=$(grep -iE '\.m?js$'    /tmp/changed_files.txt | sed '/^$/d' | wc -l | tr -d ' ')
+          # Contagens por extensão usando awk (não falha quando não há matches)
+          COUNT_HTML=$(awk 'BEGIN{IGNORECASE=1} /\.html?$/ {c++} END{print c+0}' /tmp/changed_files.txt)
+          COUNT_CSS=$(awk  'BEGIN{IGNORECASE=1} /\.css$/   {c++} END{print c+0}' /tmp/changed_files.txt)
+          COUNT_JS=$(awk   'BEGIN{IGNORECASE=1} /\.m?js$/  {c++} END{print c+0}' /tmp/changed_files.txt)
 
           echo "HTML: $COUNT_HTML | CSS: $COUNT_CSS | JS: $COUNT_JS"
 
@@ -64,29 +71,3 @@ jobs:
           echo "css=$COUNT_CSS"   >> "$GITHUB_OUTPUT"
           echo "js=$COUNT_JS"     >> "$GITHUB_OUTPUT"
 
-      # 5) Step: Resumo bonitinho (Job Summary)
-      - name: Publicar resumo
-        run: |
-          {
-            echo "## 📊 Estatísticas do Push"
-            echo ""
-            echo "- **Data/Hora (Local):** ${{ steps.data.outputs.dt_local }}"
-            echo "- **Data/Hora (UTC):**   ${{ steps.data.outputs.dt_utc }}"
-            echo "- **Usuário:**          ${{ steps.usuario.outputs.actor }}"
-            echo ""
-            echo "### Arquivos alterados neste push"
-            echo "- **HTML:** ${{ steps.changed.outputs.html }}"
-            echo "- **CSS:**  ${{ steps.changed.outputs.css }}"
-            echo "- **JS:**   ${{ steps.changed.outputs.js }}"
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      # 6) Step: Logs diretos (opcional)
-      - name: Mostrar no log em sequência
-        run: |
-          echo "🕒 ${{
-            steps.data.outputs.dt_local
-          }}"
-          echo "👤 ${{
-            steps.usuario.outputs.actor
-          }}"
-          echo "📄 HTML=${{ steps.changed.outputs.html }} CSS=${{ steps.changed.outputs.css }} JS=${{ steps.changed.outputs.js }}"
